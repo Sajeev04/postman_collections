@@ -1,0 +1,1246 @@
+{
+	"info": {
+		"_postman_id": "c7c12a04-ee51-4309-ad67-4960cd179ad7",
+		"name": "BW6_ST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Session",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"\r",
+							"tests[\"Status code is Success: \" + responseCode.code ] = responseCode.code === 200;\r",
+							"// tests[\"Session Checks is: \"] = postman.getResponseHeader(\"Set-Cookie\") !== undefined;\r",
+							"\r",
+							"if (responseCode.code == 200 && postman.getResponseHeader(\"Set-Cookie\") !== undefined && postman.getResponseHeader(\"Set-Cookie\") !== \"\") {\r",
+							"    postman.setGlobalVariable(\"sessionId\", postman.getResponseHeader(\"Set-Cookie\").split(\";\")[0].substring(10));\r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"    postman.setNextRequest(null)\r",
+							"    return;\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "server",
+							"value": "{{SessionServer}}",
+							"type": "text"
+						},
+						{
+							"key": "cardnum",
+							"value": "{{AccountNumber}}",
+							"type": "text"
+						},
+						{
+							"key": "cardseq",
+							"value": "{{SequenceNumber}}",
+							"type": "text"
+						},
+						{
+							"key": "verbose",
+							"value": "on",
+							"type": "text"
+						},
+						{
+							"key": "attu",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "channel",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "conmode",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "devtype",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "action",
+							"value": "Logon TRaP",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{SessionUrl}}",
+					"host": [
+						"{{SessionUrl}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HealthCheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://vm400008530:30383/healthcheck",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30383",
+					"path": [
+						"healthcheck"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateCOBProcess",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"postman.setGlobalVariable('ran', _.random(1, 1000000));\r",
+							"\r",
+							"pm.request.headers.add(new Header('UVID:Sajeev_UVID_'+ pm.globals.get(\"ran\")));\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"\r",
+							"console.log(\"\\nRequestBody:\\n\"+pm.request.body.raw +\"\\nResponseBody:\\n\"+responseBody)\r",
+							"\r",
+							"tests[\"Status code is Success: \" + responseCode.code ] = responseCode.code === 200;\r",
+							"var mtype = jsonData.createCOBProcessResponse.messages.message[0].messageType;\r",
+							"tests[\"Message Type is INFO: \" + mtype ] = mtype === \"INFO\";\r",
+							"var mkey = jsonData.createCOBProcessResponse.messages.message[0].messageKey;\r",
+							"tests[\"Message Key is Success: \" + mkey] = mkey === \"MESSAGE_BPMCOB_0000\"\r",
+							"\r",
+							"if (responseCode.code != 200 && mtype != \"INFO\" && mkey != \"MESSAGE_BPMCOB_0000\") {\r",
+							"    postman.setNextRequest(null)\r",
+							"    return;\r",
+							"}\r",
+							"if (responseCode.code === 200 && mtype === \"INFO\" && mkey === \"MESSAGE_BPMCOB_0000\")\r",
+							"{\r",
+							"    postman.setGlobalVariable(\"RequestId\", jsonData.createCOBProcessResponse.requestId);\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "UVID",
+						"type": "text",
+						"value": "C6NAkYtls-lrZE95N0bHq4Wp",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"createCOBProcessRequest\": {\r\n        \"requestedProducts\": {\r\n            \"package\": {\r\n                \"name\": \"Slim\",\r\n                \"id\": 4458\r\n            },\r\n            \"crossSellProducts\": {\r\n                \"product\": [\r\n                    {\r\n                        \"name\": \"ABN AMRO Boekhouden MKB\",\r\n                        \"id\": 2310\r\n                    }\r\n                ]\r\n            }\r\n        }\r\n    }\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v2",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCOBProcessDetails",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v1/{{RequestId}}?filter='requestedProducts'",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "'requestedProducts'"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SearchKvK",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"postman.setGlobalVariable('ran', _.random(1, 1000000));\r",
+							"\r",
+							"pm.request.headers.add(new Header('UVID:Sajeev_UVID_'+ pm.globals.get(\"ran\")));\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "UVID",
+						"value": "C6NAkYtls-lrZE95N0bHq4Wp",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30384/commercial-banking/cobrequest/v1/{{RequestId}}/kvk/01077092",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30384",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}",
+						"kvk",
+						"01077092"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CompanyEligibility",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "UVID",
+						"value": "C6NAkYtls-lrZE95N0bHq4Wp",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30385/commercial-banking/cobrequest/v1/{{RequestId}}/companyEligibility?kvk=01048323",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30385",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}",
+						"companyEligibility"
+					],
+					"query": [
+						{
+							"key": "kvk",
+							"value": "01048323"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCOBProcessDetails_1",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v2/{{RequestId}}?filter=''",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v2",
+						"{{RequestId}}"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "''"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateCOBProcessDetails",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "sessionId",
+						"value": "{{sessionId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"updateCOBProcessRequest\": {\r\n        \"requestDetails\": {\r\n            \"communicationDetails\": {\r\n                \"emailID\": \"test@test.com\",\r\n                \"contactNumber\": 3161234656\r\n            }\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v1/{{RequestId}}",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateCOBProcessDetails_2",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "sessionId",
+						"type": "text",
+						"value": "{{sessionId}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"updateCOBProcessRequest\": {\r\n        \"action\": \"DATAENTRYCOMPLETE\",\r\n        \"requestDetails\": {\r\n            \"communicationDetails\": {\r\n                \"emailID\": \"a@t.com\",\r\n                \"contactNumber\": \"+31612345678\"\r\n            },\r\n            \"questionnair\": {\r\n                \"questions\": [\r\n                    {\r\n                        \"id\": 1,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Verwacht u dat meer dan 20%  van alle bij- en afschrijvingen op uw nieuwe zakelijke rekening van of naar rekeningen in het buitenland gaat?\",\r\n                        \"answer\": \"Nee\"\r\n                    },\r\n                    {\r\n                        \"id\": 2,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Verwacht u zaken te doen in Iran, Noord-Korea, Cuba of Syrië?\",\r\n                        \"answer\": \"Nee\"\r\n                    },\r\n                    {\r\n                        \"id\": 4,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Van hoeveel procent van de inkomsten en uitgaven verwacht u dat het transacties in muntgeld en/of bankbiljetten zijn?\",\r\n                        \"answer\": \"Minder dan 5%\"\r\n                    },\r\n                    {\r\n                        \"id\": 5,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Bent u actief in één of meer van deze branches?\",\r\n                        \"answer\": \"Nee\"\r\n                    },\r\n                    {\r\n                        \"id\": 6,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Bent u leverancier of producent van defensiematerieel of op een andere manier betrokken bij de sector defensie?\",\r\n                        \"answer\": \"Nee\"\r\n                    },\r\n                    {\r\n                        \"id\": 7,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Heeft een financiële instelling, inclusief ABN AMRO, in het verleden de zakelijke relatie met uw onderneming beëindigd of geweigerd?\",\r\n                        \"answer\": \"Nee\"\r\n                    },\r\n                    {\r\n                        \"id\": 8,\r\n                        \"type\": \"CAAML\",\r\n                        \"question\": \"Heeft een financiële instelling, inclusief ABN AMRO, in het verleden de relatie met de handelend bestuurder of uiteindelijk belanghebbende beëindigd of geweigerd?\",\r\n                        \"answer\": \"Nee\"\r\n                    }\r\n                ]\r\n            }\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v1/{{RequestId}}",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCOBProcessDetails_2",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v1/{{RequestId}}?filter='bookkeepingEligibility'",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "'bookkeepingEligibility'"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Patch",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestedCrossSellProducts\": {\r\n        \"product\": [\r\n            {\r\n                \"name\": \"Management BV & Holding\",\r\n                \"id\": \"004405\"\r\n            }\r\n        ]\r\n    }\r\n}"
+				},
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v2/{{RequestId}}/patch",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v2",
+						"{{RequestId}}",
+						"patch"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PerformActivity_SUBMIT",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "sessionId",
+						"value": "{{sessionId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"performActivityRequest\": {\n        \"action\": \"SUBMIT\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30386/commercial-banking/cobrequest/v1/{{RequestId}}/activity",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30386",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}",
+						"activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PerformActivity_CONFIRM",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"\r",
+							" postman.setGlobalVariable(\"SignItemId\", jsonData.performActivityResponse.nameValuePair[0].value);\r",
+							"\r",
+							"tests[\"Status code is Success: \" + responseCode.code ] = responseCode.code === 200;\r",
+							"var mtype = jsonData.performActivityResponse.messages.message[0].messageType;\r",
+							"tests[\"Message Type is INFO: \" + mtype ] = mtype === \"INFO\";\r",
+							"\r",
+							"var mkey = jsonData.performActivityResponse.messages.message[0].messageKey;\r",
+							"tests[\"Message Key is Success: \" + mkey] = mkey === \"MESSAGE_BPMCOB_0000\"\r",
+							"\r",
+							"if (responseCode.code != 200 && mtype != \"INFO\" && mkey != \"MESSAGE_BPMCOB_0000\") \r",
+							"{\r",
+							"    postman.setNextRequest(null)\r",
+							"    return;\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('SessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "sessionId",
+						"type": "text",
+						"value": "{{sessionId}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"performActivityRequest\": {\n        \"action\": \"CONFIRM\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30386/commercial-banking/cobrequest/v1/{{RequestId}}/activity",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30386",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}",
+						"activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCOBProcessDetails_3",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v1/{{RequestId}}?filter=''",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "''"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GenericSigning",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonObject = xml2Json(responseBody);\r",
+							"\r",
+							"tests[\"Status code is Success: \" + responseCode.code ] = responseCode.code === 200;\r",
+							"var Outcome = jsonObject['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns0:updateSignItemsResponse']['UpdateResultDTO']['updateSuccessful']['_'];\r",
+							"tests[\"Is Update Successful: \" + Outcome ] = jsonObject['SOAP-ENV:Envelope']['SOAP-ENV:Body']['ns0:updateSignItemsResponse']['UpdateResultDTO']['updateSuccessful']['_'] === 'true';\r",
+							"\r",
+							"if (responseCode.code != 200 && Outcome !== true) {\r",
+							"    postman.setNextRequest(null)\r",
+							"    return;\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml;charset=UTF-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "/GenericSigningAdaptor/Services/GenericSigningAdaptorService.serviceagent/GenericSigningAdaptorEndpoint/updateSignItems",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip,deflate",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "Keep-Alive",
+						"type": "text"
+					},
+					{
+						"key": "Content-Length",
+						"value": "671",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:gen=\"http://genericsigning.service.channels.nl.abnamro.com/\">\r\n  <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <gen:updateSignItems>\r\n         <!--Zero or more repetitions:-->\r\n         <gen:SignItemUpdateDTOList>\r\n            <!--Zero or more repetitions:-->\r\n\r\n            <revisionNumber>1</revisionNumber>\r\n            <signItemId>{{SignItemId}}</signItemId>\r\n            <!--Optional:-->\r\n\r\n            <!--Zero or more repetitions:-->\r\n            <signersData>\r\n\r\n               <indicationCosigner>true</indicationCosigner>\r\n               <!--Optional:-->\r\n               <signatureDocumentId>{{DocId}}</signatureDocumentId>\r\n               <!--Optional:-->\r\n               <signer>{{RetailBC}}</signer>\r\n               <signingChannel>1</signingChannel>\r\n             </signersData>\r\n                  \r\n            <!--Optional:-->\r\n            <signingResultStatus>FULLY_SIGNED</signingResultStatus>\r\n         </gen:SignItemUpdateDTOList>\r\n         <!--Optional:-->\r\n         <gen:SigningContextDTO>\r\n\r\n            <contactMethod>cmet</contactMethod>\r\n            <!--Optional:-->\r\n            <contactReference>cref</contactReference>\r\n            <!--Optional:-->\r\n            <contactType>ctype</contactType>\r\n            <!--Optional:-->\r\n            <securityContextDTO>\r\n\r\n               <bcToolOwner>{{RetailBC}}</bcToolOwner>\r\n               <channel>1</channel>\r\n               <!--Optional:-->\r\n               <sessionId>{{sessionId}}</sessionId>\r\n               <!--Optional:-->\r\n               <toolId>0476701384_542</toolId>\r\n               <toolType>1</toolType>\r\n               <toolUsage>12</toolUsage>\r\n               <!--Optional:-->\r\n               <userClass>BC</userClass>\r\n               <!--Optional:-->\r\n               <userReference>{{RetailBC}}</userReference>\r\n            </securityContextDTO>\r\n         </gen:SigningContextDTO>\r\n      </gen:updateSignItems>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm00006321:9048/GenericSigningAdaptor/Services/GenericSigningAdaptorService.serviceagent/GenericSigningAdaptorEndpoint",
+					"protocol": "http",
+					"host": [
+						"vm00006321"
+					],
+					"port": "9048",
+					"path": [
+						"GenericSigningAdaptor",
+						"Services",
+						"GenericSigningAdaptorService.serviceagent",
+						"GenericSigningAdaptorEndpoint"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PerformActivity_COMPLETE",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "sessionId",
+						"type": "text",
+						"value": "{{sessionId}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"performActivityRequest\": {\n        \"action\": \"COMPLETE\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30386/commercial-banking/cobrequest/v1/{{RequestId}}/activity",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30386",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}",
+						"activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCOBProcessDetails_4",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('sessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{URL}}:30383/commercial-banking/cobrequest/v1/{{RequestId}}?filter=''",
+					"host": [
+						"{{URL}}"
+					],
+					"port": "30383",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v1",
+						"{{RequestId}}"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "''"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCOBRecord",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://vm400008530:30387/requeststore/cobrequest/v1/edb17ea1b3ae45af809faab5404a9096",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30387",
+					"path": [
+						"requeststore",
+						"cobrequest",
+						"v1",
+						"edb17ea1b3ae45af809faab5404a9096"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateCOBRecord",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"createCOBRequestInput\": {\r\n    \"payload\": \"payload of the request\",\r\n    \"payloadSchemaReference\": \"common.xsd\",\r\n    \"intent\": \"NEW_CUSTOMER_ONBOARDING\",\r\n    \"customerIdentifier\": 1234567890,\r\n    \"bcNumber\": 1234567890,\r\n    \"keys\": {\r\n      \"key\": [\r\n        {\r\n          \"key\": \"KVK_NUMBER\",\r\n          \"value\": \"2222222\"\r\n        },\r\n        {\r\n          \"key\": \"BUSINESS_BC_NUMBER\",\r\n          \"value\": \"12344\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30387/requeststore/cobrequest/v1",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30387",
+					"path": [
+						"requeststore",
+						"cobrequest",
+						"v1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ProductFulfillment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"productFulfillmentRequest\": {\r\n    \"processId\": \"cd04c459f0c74bfcb94d33a8f32fcd70\",\r\n    \"productId\": \"1234567\",\r\n    \"naturalPersonDetails\": {\r\n      \"bcNumber\": \"9876543210\",\r\n      \"personalDetails\": {\r\n        \"initials\": \"K.\",\r\n        \"firstName\": \"Kinjal\",\r\n        \"lastName\": \"Tank\",\r\n        \"lastNamePrefix\": \"van\",\r\n        \"shortName\": \"K TANK\",\r\n        \"gender\": \"F\",\r\n        \"dob\": \"20200613\"\r\n      },\r\n      \"communicationDetails\": {\r\n        \"emailID\": \"test@test.com\",\r\n        \"contactNumber\": \"12345678\",\r\n        \"languageId\": \"NL\"\r\n      }\r\n    },\r\n    \"companyDetails\": {\r\n      \"kvkNumber\": \"12345678\",\r\n      \"startDate\": \"12345678\",\r\n      \"name\": \"ABN Amro\",\r\n      \"shortName\": \"ABN AMRO\",\r\n      \"legalForm\": \"BV\",\r\n      \"accountDetails\": {\r\n        \"bcNumber\": \"12345678\",\r\n        \"accNumber\": \"12345678\",\r\n        \"accIBAN\": \"ABN09876543210\",\r\n        \"accType\": \"Payment\",\r\n        \"accCurrency\": \"Euro\",\r\n        \"accName\": \"K TANK\",\r\n        \"userClass\": \"BC\",\r\n        \"packageName\": \"ABN BASIC PACKAGE\",\r\n        \"countryTax\": \"NL\"\r\n      },\r\n      \"address\": [\r\n        {\r\n          \"type\": \"POSTAL\",\r\n          \"houseNumber\": 1,\r\n          \"additionalHouseNumber\": \"A\",\r\n          \"streetName\": \"CentralStreet\",\r\n          \"town\": \"Amsterdam\",\r\n          \"zipCode\": \"1111AB\",\r\n          \"country\": \"NL\"\r\n        }\r\n      ],\r\n      \"tradeNameList\": {\r\n        \"name\": [\r\n          \"ABN\"\r\n        ]\r\n      }\r\n    },\r\n    \"nameValuePair\": [\r\n      {\r\n        \"name\": \"COB_ID\",\r\n        \"value\": \"12345678\"\r\n      }\r\n    ]\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30403/productFulfillment/bookkeeping/v1",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30403",
+					"path": [
+						"productFulfillment",
+						"bookkeeping",
+						"v1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateCOBRecord",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"updateCOBRequestInput\": {\r\n    \"payload\": \"payload of the request change\",\r\n    \"revisionNumber\": 1,\r\n    \"keys\": {\r\n      \"key\": [\r\n        {\r\n          \"key\": \"KVK_NUMBER\",\r\n          \"value\": \"333\"\r\n        },\r\n        {\r\n          \"key\": \"BUSINESS_BC_NUMBER\",\r\n          \"value\": \"12344\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30387/requeststore/cobrequest/v1/78e110c2b6ce42adb549a98b2115432d",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30387",
+					"path": [
+						"requeststore",
+						"cobrequest",
+						"v1",
+						"78e110c2b6ce42adb549a98b2115432d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteCOBRecord",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://vm400008530:30387/requeststore/cobrequest/v1/edb17ea1b3ae45af809faab5404a9096",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30387",
+					"path": [
+						"requeststore",
+						"cobrequest",
+						"v1",
+						"edb17ea1b3ae45af809faab5404a9096"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ListCOBRecord",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"listCOBRequestInput\": {\r\n        \"keys\": {\r\n            \"key\": [\r\n                {\r\n                    \"key\": \"kvkNumber\",\r\n                    \"value\": \"1111111\"\r\n                }\r\n            ]\r\n        },\r\n        \"includePayload\": false\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30387/requeststore/cobrequest/v1?key=Test",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30387",
+					"path": [
+						"requeststore",
+						"cobrequest",
+						"v1"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "Test"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateIdentityDocumentVerification",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('SessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"createIdentityDocumentVerificationRequest\": {\r\n        \"callbackURL\": \"https://www.abnamro.com/cob/customeronboarding/home.html\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30418/commercial-banking/cobrequest/v2/{{RequestId}}/identitydocumentverification/v1",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30418",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v2",
+						"{{RequestId}}",
+						"identitydocumentverification",
+						"v1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Id&V transaction result",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var Header = require('postman-collection').Header\r",
+							"if(pm.environment.name.includes('ET'))\r",
+							"{\r",
+							"pm.request.headers.add(new Header('Cookie:SMSession='+pm.globals.get(\"sessionId\")));    \r",
+							"}\r",
+							"else\r",
+							"{\r",
+							"pm.request.headers.add(new Header('SessionId:'+pm.globals.get(\"sessionId\")));\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"performActivityRequest\": {\r\n        \"action\": \"SUBMIT\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://vm400008530:30418/commercial-banking/cobrequest/v2/{{RequestId}}/identitydocumentverification/v1/{{IdnV_TransactionId}}",
+					"protocol": "http",
+					"host": [
+						"vm400008530"
+					],
+					"port": "30418",
+					"path": [
+						"commercial-banking",
+						"cobrequest",
+						"v2",
+						"{{RequestId}}",
+						"identitydocumentverification",
+						"v1",
+						"{{IdnV_TransactionId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
